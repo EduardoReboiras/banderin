@@ -1,0 +1,17 @@
+# Archivos compilados de Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Base de datos local (SQLite)
+banderin.db
+banderin.db-wal
+banderin.db-shm
+
+# Archivos de entorno virtual
+venv/
+.env
+
+# Archivos de configuración de IDE
+.vscode/
+.idea/
