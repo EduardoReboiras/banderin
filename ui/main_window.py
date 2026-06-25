@@ -7,7 +7,7 @@ from ui.views.products_view import ProductsView
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Sistema de Gestión - Librería")
+        self.setWindowTitle("Banderín - Sistema de Gestión")
         self.resize(1000, 700)
         self._init_ui()
     

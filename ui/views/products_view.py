@@ -29,7 +29,7 @@ class ProductsView(QWidget):
         layout.setSpacing(10)
         
         # Título
-        titulo = QLabel("📦 Gestión de Productos - Librería")
+        titulo = QLabel("Gestión de Productos - Banderín")
         titulo.setStyleSheet("""
             font-size: 18px; 
             font-weight: bold; 
