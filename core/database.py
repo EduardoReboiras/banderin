@@ -31,12 +31,33 @@ class Database:
                 descripcion TEXT NOT NULL,
                 precio_unitario REAL NOT NULL,
                 fecha_alta TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        """)
-        # Índice para búsquedas rápidas por código
-        cursor.execute("""
+            );
+            
             CREATE INDEX IF NOT EXISTS idx_codigo 
-            ON productos(codigo)
+            ON productos(codigo);
+            
+            -- NUEVO: Tabla de compras (cabecera)
+            CREATE TABLE IF NOT EXISTS compras (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                cantidad_items INTEGER DEFAULT 0,
+                total REAL DEFAULT 0.0
+            );
+            
+            -- NUEVO: Tabla de detalles de compra
+            CREATE TABLE IF NOT EXISTS detalle_compras (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                compra_id INTEGER NOT NULL,
+                codigo_producto TEXT NOT NULL,
+                descripcion TEXT NOT NULL,
+                precio_unitario REAL NOT NULL,
+                cantidad INTEGER NOT NULL,
+                subtotal REAL NOT NULL,
+                FOREIGN KEY (compra_id) REFERENCES compras(id) ON DELETE CASCADE
+            );
+            
+            CREATE INDEX IF NOT EXISTS idx_detalle_compra 
+            ON detalle_compras(compra_id);
         """)
         self._conn.commit()
     
