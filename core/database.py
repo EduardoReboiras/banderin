@@ -22,9 +22,8 @@ class Database:
         self._initialized = True
     
     def _create_tables(self):
-        """Solo creamos la tabla de productos por ahora"""
         cursor = self._conn.cursor()
-        cursor.execute("""
+        cursor.executescript("""
             CREATE TABLE IF NOT EXISTS productos (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 codigo TEXT UNIQUE NOT NULL,
@@ -36,7 +35,6 @@ class Database:
             CREATE INDEX IF NOT EXISTS idx_codigo 
             ON productos(codigo);
             
-            -- NUEVO: Tabla de compras (cabecera)
             CREATE TABLE IF NOT EXISTS compras (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -44,7 +42,6 @@ class Database:
                 total REAL DEFAULT 0.0
             );
             
-            -- NUEVO: Tabla de detalles de compra
             CREATE TABLE IF NOT EXISTS detalle_compras (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 compra_id INTEGER NOT NULL,
@@ -60,7 +57,7 @@ class Database:
             ON detalle_compras(compra_id);
         """)
         self._conn.commit()
-    
+        
     @contextmanager
     def get_cursor(self):
         cursor = self._conn.cursor()
