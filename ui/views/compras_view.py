@@ -50,6 +50,11 @@ class ComprasView(QWidget):
                 padding: 5px;
                 border-radius: 3px;
             }
+            QDateEdit:disabled {
+                background-color: #ecf0f1;
+                color: #7f8c8d;
+                border: 1px solid #bdc3c7;
+            }
         """)
 
         form_layout.addRow("Fecha de Compra:", self.date_compra)
@@ -257,6 +262,11 @@ class ComprasView(QWidget):
         self.lineas_actuales.append(detalle)
         self.actualizar_tabla_lineas()
         self.limpiar_formulario_linea()
+
+        # 🔒 BLOQUEAR LA FECHA SI YA HAY AL MENOS UNA LÍNEA
+        if len(self.lineas_actuales) > 0:
+            self.date_compra.setEnabled(False)
+            self.date_compra.setToolTip("La fecha no se puede cambiar con líneas cargadas")
     
     def quitar_linea(self):
         # Verificar que haya un modelo asignado
@@ -284,6 +294,10 @@ class ComprasView(QWidget):
         ) == QMessageBox.Yes:
             self.lineas_actuales.clear()
             self.actualizar_tabla_lineas()
+            # 🔓 DESBLOQUEAR LA FECHA Y PONER LA DE HOY
+            self.date_compra.setEnabled(True)
+            self.date_compra.setDate(QDate.currentDate())
+            self.date_compra.setToolTip("Seleccioná la fecha de la compra")
     
     def actualizar_tabla_lineas(self):
         from PySide6.QtGui import QStandardItemModel, QStandardItem
@@ -330,6 +344,11 @@ class ComprasView(QWidget):
             self.lineas_actuales.clear()
             self.actualizar_tabla_lineas()
             self.cargar_historial()
+
+            #  DESBLOQUEAR LA FECHA PARA LA PRÓXIMA COMPRA
+            self.date_compra.setEnabled(True)
+            self.date_compra.setDate(QDate.currentDate())
+            self.date_compra.setToolTip("Seleccioná la fecha de la compra")
         else:
             QMessageBox.critical(self, "Error", "No se pudo guardar la compra")
     
@@ -391,9 +410,8 @@ class ComprasView(QWidget):
             QMessageBox.information(self, "Éxito", "Ticket enviado a la impresora")
     
     def _generar_html_ticket(self, compra: Compra) -> str:
-        """Genera el HTML del ticket con formato profesional"""
+        """Genera el HTML del ticket con formato profesional y espaciado"""
         
-        # Formatear el total
         total_fmt = f"$ {compra.total:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
         
         # Generar las filas de detalles
@@ -404,16 +422,10 @@ class ComprasView(QWidget):
             
             detalles_html += f"""
             <tr>
-                <td style="padding: 5px 0;"><b>{detalle.codigo_producto}</b></td>
-                <td colspan="2" style="padding: 5px 0;">{detalle.descripcion}</td>
-            </tr>
-            <tr>
-                <td></td>
-                <td style="text-align: right;">{detalle.cantidad} x {precio_fmt}</td>
-                <td style="text-align: right;"><b>{subtotal_fmt}</b></td>
-            </tr>
-            <tr>
-                <td colspan="3" style="border-bottom: 1px dashed #ccc; padding-bottom: 10px;"></td>
+                <td class="col-codigo"><b>{detalle.codigo_producto}</b></td>
+                <td class="col-descripcion">{detalle.descripcion}</td>
+                <td class="col-cantidad">{detalle.cantidad} x {precio_fmt}</td>
+                <td class="col-subtotal"><b>{subtotal_fmt}</b></td>
             </tr>
             """
         
@@ -425,10 +437,11 @@ class ComprasView(QWidget):
             <meta charset="UTF-8">
             <style>
                 body {{
-                    font-family: 'Courier New', monospace;
-                    font-size: 12pt;
+                    font-family: 'Segoe UI', Arial, sans-serif;
+                    font-size: 11pt;
                     margin: 0;
                     padding: 20px;
+                    color: #000;
                 }}
                 .header {{
                     text-align: center;
@@ -438,7 +451,8 @@ class ComprasView(QWidget):
                 }}
                 .header h1 {{
                     margin: 0;
-                    font-size: 18pt;
+                    font-size: 16pt;
+                    letter-spacing: 1px;
                 }}
                 .header p {{
                     margin: 5px 0;
@@ -446,45 +460,53 @@ class ComprasView(QWidget):
                 }}
                 .info {{
                     margin-bottom: 15px;
+                    font-size: 10pt;
                 }}
                 table {{
                     width: 100%;
                     border-collapse: collapse;
                     margin-bottom: 20px;
                 }}
+                .col-codigo {{ width: 20%; padding-right: 15px; vertical-align: top; }}
+                .col-descripcion {{ width: 40%; padding-left: 5px; padding-right: 10px; vertical-align: top; }}
+                .col-cantidad {{ width: 20%; text-align: right; padding-right: 15px; vertical-align: top; }}
+                .col-subtotal {{ width: 20%; text-align: right; vertical-align: top; }}
+                tr {{ border-bottom: 1px dashed #ccc; }}
                 .total {{
                     border-top: 2px solid #000;
                     padding-top: 10px;
                     text-align: right;
-                    font-size: 14pt;
+                    font-size: 13pt;
+                    margin-top: 10px;
                 }}
                 .footer {{
                     text-align: center;
-                    margin-top: 20px;
-                    border-top: 2px solid #000;
+                    margin-top: 30px;
+                    border-top: 1px solid #ccc;
                     padding-top: 10px;
-                    font-size: 10pt;
+                    font-size: 9pt;
+                    color: #555;
                 }}
             </style>
         </head>
         <body>
             <div class="header">
                 <h1>BANDERÍN - LIBRERÍA</h1>
-                <p><b>TICKET DE COMPRA</b></p>
+                <p><b>TICKET DE COMPRA A PROVEEDOR</b></p>
             </div>
             
             <div class="info">
                 <p><b>N° Compra:</b> {compra.id}</p>
-                <p style="font-size: 12pt;"><b>Fecha de Compra:</b> {compra.get_fecha_formateada()}</p>
+                <p><b>Fecha:</b> {compra.get_fecha_formateada()}</p>
             </div>
             
             <table>
                 <thead>
                     <tr style="border-bottom: 2px solid #000;">
-                        <th style="text-align: left; width: 20%;">Código</th>
-                        <th style="text-align: left; width: 50%;">Descripción</th>
-                        <th style="text-align: right; width: 15%;">Cant.</th>
-                        <th style="text-align: right; width: 15%;">Subtotal</th>
+                        <th class="col-codigo" style="text-align: left;">Código</th>
+                        <th class="col-descripcion" style="text-align: left;">Descripción</th>
+                        <th class="col-cantidad" style="text-align: right;">Detalle</th>
+                        <th class="col-subtotal" style="text-align: right;">Subtotal</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -494,11 +516,11 @@ class ComprasView(QWidget):
             
             <div class="total">
                 <p><b>TOTAL: {total_fmt}</b></p>
-                <p>Cantidad de items: {compra.cantidad_items}</p>
+                <p style="font-size: 10pt; font-weight: normal;">Items: {compra.cantidad_items}</p>
             </div>
             
             <div class="footer">
-                <p>¡Gracias por su compra!</p>
+                <p>Registro interno de compras - Banderín</p>
             </div>
         </body>
         </html>
