@@ -185,15 +185,71 @@ class ProductsView(QWidget):
     
     def _parsear_precio(self, texto: str) -> Decimal | None:
         """
-        Convierte un string de precio en formato argentino a Decimal
-        Ej: "8.434,80" -> Decimal("8434.80")
+        Convierte un string de precio a Decimal, detectando automáticamente
+        si está en formato argentino (8.434,80) o estándar/inglés (8342.23).
         """
         try:
-            # Remover símbolo de peso y espacios
+            # Limpiar símbolos y espacios
             texto = texto.replace("$", "").strip()
-            # Reemplazar punto de miles y coma decimal
-            texto = texto.replace(".", "").replace(",", ".")
+            
+            if not texto:
+                return None
+            
+            # Contar puntos y comas
+            cantidad_puntos = texto.count('.')
+            cantidad_comas = texto.count(',')
+            
+            # Caso 1: Tiene ambos (ej: "8.434,80" o "8,434.80")
+            if cantidad_puntos > 0 and cantidad_comas > 0:
+                # El último separador es el decimal
+                ultimo_punto = texto.rfind('.')
+                ultima_coma = texto.rfind(',')
+                
+                if ultima_coma > ultimo_punto:
+                    # Formato argentino: "8.434,80"
+                    texto = texto.replace('.', '').replace(',', '.')
+                else:
+                    # Formato inglés: "8,434.80"
+                    texto = texto.replace(',', '')
+            
+            # Caso 2: Solo tiene comas (ej: "8342,80" o "8,434")
+            elif cantidad_comas > 0 and cantidad_puntos == 0:
+                # Si hay una sola coma y 1-3 dígitos después, es decimal
+                # Si hay una sola coma y más de 3 dígitos después, es de miles
+                posicion_coma = texto.index(',')
+                digitos_despues = len(texto) - posicion_coma - 1
+                
+                if digitos_despues <= 2:
+                    # Es decimal: "8342,80"
+                    texto = texto.replace(',', '.')
+                else:
+                    # Es de miles: "8,434" (raro pero posible)
+                    texto = texto.replace(',', '')
+            
+            # Caso 3: Solo tiene puntos (ej: "8342.23" o "8.434")
+            elif cantidad_puntos > 0 and cantidad_comas == 0:
+                # Si hay un solo punto y 1-2 dígitos después, es decimal
+                # Si hay un solo punto y 3 dígitos después, es ambiguo (asumimos decimal)
+                # Si hay múltiples puntos, son de miles
+                if cantidad_puntos == 1:
+                    posicion_punto = texto.index('.')
+                    digitos_despues = len(texto) - posicion_punto - 1
+                    
+                    if digitos_despues <= 2:
+                        # Es decimal: "8342.23"
+                        pass  # Ya está en formato correcto
+                    else:
+                        # Es de miles: "8.434" (raro en formato inglés)
+                        texto = texto.replace('.', '')
+                else:
+                    # Múltiples puntos: son de miles "8.434.000"
+                    texto = texto.replace('.', '')
+            
+            # Caso 4: No tiene separadores (ej: "8342")
+            # Ya está en formato correcto
+            
             return Decimal(texto)
+        
         except Exception:
             return None
     
