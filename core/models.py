@@ -58,7 +58,7 @@ class DetalleCompra:
 class Compra:
     """Cabecera de la compra"""
     id: Optional[int] = None
-    fecha: Optional[datetime] = None
+    fecha: Optional[str] = None  # Cambiado a str para manejar "YYYY-MM-DD"
     cantidad_items: int = 0
     total: Decimal = Decimal("0.00")
     # Lista de detalles (no se guarda en DB directamente)
@@ -70,17 +70,26 @@ class Compra:
             return None
         return cls(
             id=row["id"],
-            fecha=row["fecha"],
+            fecha=row["fecha"],  # Ya viene como string desde SQLite
             cantidad_items=row["cantidad_items"],
             total=Decimal(str(row["total"]))
         )
     
     def get_fecha_formateada(self) -> str:
+        """Formatea la fecha para mostrar: 27/06/2026"""
         if not self.fecha:
             return ""
-        if isinstance(self.fecha, str):
-            return self.fecha
-        return self.fecha.strftime("%d/%m/%Y %H:%M")
+        # Si viene como "2026-06-27 10:30:00", tomamos solo la fecha
+        if " " in self.fecha:
+            self.fecha = self.fecha.split(" ")[0]
+        # Convertir de "YYYY-MM-DD" a "DD/MM/YYYY"
+        try:
+            partes = self.fecha.split("-")
+            if len(partes) == 3:
+                return f"{partes[2]}/{partes[1]}/{partes[0]}"
+        except:
+            pass
+        return self.fecha
     
     def get_total_formateado(self) -> str:
         return f"$ {self.total:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")    

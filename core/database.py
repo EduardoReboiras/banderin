@@ -37,7 +37,7 @@ class Database:
             
             CREATE TABLE IF NOT EXISTS compras (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                fecha DATE NOT NULL,
                 cantidad_items INTEGER DEFAULT 0,
                 total REAL DEFAULT 0.0
             );

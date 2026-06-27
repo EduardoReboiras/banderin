@@ -38,6 +38,22 @@ class ComprasView(QWidget):
         form_group = QGroupBox("Agregar Producto a la Compra")
         form_layout = QFormLayout()
         
+        self.date_compra = QDateEdit()
+        self.date_compra.setDate(QDate.currentDate())  # Fecha de hoy por defecto
+        self.date_compra.setCalendarPopup(True)  # Mostrar calendario al hacer clic
+        self.date_compra.setDisplayFormat("dd/MM/yyyy")
+        self.date_compra.setStyleSheet("""
+            QDateEdit {
+                background-color: white;
+                color: #2c3e50;
+                border: 1px solid #bdc3c7;
+                padding: 5px;
+                border-radius: 3px;
+            }
+        """)
+
+        form_layout.addRow("Fecha de Compra:", self.date_compra)
+
         self.txt_codigo = QLineEdit()
         self.txt_codigo.setPlaceholderText("Ej: 345-0019")
         
@@ -304,7 +320,10 @@ class ComprasView(QWidget):
             QMessageBox.warning(self, "Atención", "Agregá al menos una línea")
             return
         
-        compra_id = self.service.crear_compra(self.lineas_actuales)
+        fecha_qdate = self.date_compra.date()
+        fecha_str = fecha_qdate.toString("yyyy-MM-dd")
+
+        compra_id = self.service.crear_compra(self.lineas_actuales, fecha_str)
         
         if compra_id:
             QMessageBox.information(self, "Éxito", f"Compra #{compra_id} guardada correctamente")
@@ -456,7 +475,7 @@ class ComprasView(QWidget):
             
             <div class="info">
                 <p><b>N° Compra:</b> {compra.id}</p>
-                <p><b>Fecha:</b> {compra.get_fecha_formateada()}</p>
+                <p style="font-size: 12pt;"><b>Fecha de Compra:</b> {compra.get_fecha_formateada()}</p>
             </div>
             
             <table>

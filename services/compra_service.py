@@ -9,27 +9,24 @@ class CompraService:
     def __init__(self):
         self.db = Database()
     
-    def crear_compra(self, detalles: List[DetalleCompra]) -> Optional[int]:
+    def crear_compra(self, detalles: List[DetalleCompra], fecha: str) -> Optional[int]:
         """
         Crea una compra completa con todos sus detalles.
-        Retorna el ID de la compra o None si hay error.
+        :param fecha: Fecha en formato "YYYY-MM-DD" (ej: "2026-06-27")
         """
         if not detalles:
             return None
         
         try:
-            # 1. Calcular totales
             cantidad_items = len(detalles)
             total = sum(d.subtotal for d in detalles)
             
-            # 2. Insertar cabecera
             cursor = self.db.execute("""
                 INSERT INTO compras (fecha, cantidad_items, total)
                 VALUES (?, ?, ?)
-            """, (datetime.now(), cantidad_items, float(total)))
+            """, (fecha, cantidad_items, float(total)))
             compra_id = cursor.lastrowid
             
-            # 3. Insertar cada detalle
             for detalle in detalles:
                 self.db.execute("""
                     INSERT INTO detalle_compras 
