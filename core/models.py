@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import List, Optional
 from decimal import Decimal
 from datetime import datetime
@@ -25,7 +25,7 @@ class Producto:
     def get_precio_formateado(self) -> str:
         """Retorna el precio en formato argentino: $ 8.434,80"""
         return f"$ {self.precio_unitario:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
-
+@dataclass
 class DetalleCompra:
     """Una línea de la compra"""
     id: Optional[int] = None
